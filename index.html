@@ -35,7 +35,6 @@
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: var(--font-size-base); }
         body { background-color: var(--bg-main); color: var(--text-main); display: flex; min-height: 100vh; overflow-x: hidden; transition: background-color 0.3s, color 0.3s; }
 
-        /* Landing Page Overlay / View */
         #landing-view {
             position: fixed;
             top: 0; left: 0; width: 100vw; height: 100vh;
@@ -78,7 +77,6 @@
         .landing-card h3 { font-size: 1rem; margin-bottom: 8px; color: var(--accent); }
         .landing-card p { font-size: 0.85rem; color: var(--text-muted); }
 
-        /* Application Layout */
         #app-container {
             display: none;
             width: 100%;
@@ -105,13 +103,11 @@
         .view-section { display: none; flex-direction: column; gap: 25px; }
         .view-section.active-view { display: flex; }
 
-        /* Dashboard Cards */
         .dashboard-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
         .card-stat { background: var(--bg-card); border: 1px solid var(--border); padding: 20px; border-radius: 12px; }
         .card-stat h3 { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px; }
         .card-stat .number { font-size: 1.8rem; font-weight: bold; }
 
-        /* Matrice 5x5 Container */
         .matrix-section { background: var(--bg-card); border: 1px solid var(--border); padding: 20px; border-radius: 12px; display: flex; flex-direction: column; gap: 15px; }
         .matrix-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
         
@@ -135,12 +131,10 @@
         .matrix-cell.risk-med { background-color: rgba(245, 158, 11, 0.25); border-color: var(--warning); }
         .matrix-cell.risk-low { background-color: rgba(16, 185, 129, 0.25); border-color: var(--success); }
 
-        /* Panneau de détails sous la matrice */
         .matrix-details-panel { background: var(--bg-main); border: 1px solid var(--border); padding: 20px; border-radius: 8px; display: flex; flex-direction: column; gap: 12px; }
         .matrix-details-panel h4 { color: var(--accent); font-size: 1rem; display: flex; justify-content: space-between; align-items: center; }
         .risk-detail-item { background: var(--bg-card); padding: 12px; border-radius: 6px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; }
 
-        /* Actions & Table */
         .toolbar { display: flex; justify-content: space-between; align-items: center; gap: 15px; flex-wrap: wrap; }
         .toolbar-left { display: flex; gap: 10px; align-items: center; flex: 1; min-width: 280px; }
         .toolbar-right { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
@@ -153,7 +147,6 @@
         .btn-ai { background: linear-gradient(135deg, #8b5cf6, #3b82f6); color: white; }
         .btn-ai:hover { opacity: 0.9; }
         
-        /* TABLE & HORIZONTAL SCROLL */
         .table-container { 
             width: 100%; 
             overflow-x: auto; 
@@ -166,13 +159,11 @@
         th, td { padding: 14px 16px; text-align: left; border-bottom: 1px solid var(--border); font-size: 0.85rem; vertical-align: middle; }
         th { background: rgba(255,255,255,0.02); color: var(--text-muted); white-space: nowrap; }
 
-        /* Champs éditables */
         .select-val, .input-text, .textarea-box { background: var(--bg-main); color: var(--text-main); border: 1px solid var(--border); padding: 6px 10px; border-radius: 6px; font-weight: bold; }
         .select-val:focus, .input-text:focus, .textarea-box:focus { outline: none; border-color: var(--accent); }
         .input-text { width: 100%; font-family: inherit; font-size: 0.85rem; font-weight: normal; }
         .textarea-box { width: 100%; height: 120px; resize: vertical; font-family: inherit; font-size: 0.9rem; font-weight: normal; }
         
-        /* Liens interactifs Plans (Prévention / Continuité / PRA) */
         .plan-link {
             display: inline-flex;
             align-items: center;
@@ -197,7 +188,6 @@
         .plan-link.configured:hover { background-color: rgba(16, 185, 129, 0.25); }
         .plan-link:not(.configured):hover { border-color: var(--accent); color: var(--accent); }
 
-        /* Boutons Triade CIA (C, I, A) */
         .cia-group { display: flex; gap: 4px; justify-content: center; }
         .cia-btn {
             width: 28px;
@@ -219,7 +209,6 @@
         .cia-btn.active-i { background-color: rgba(245, 158, 11, 0.25); border-color: var(--cia-i); color: var(--cia-i); }
         .cia-btn.active-a { background-color: rgba(59, 130, 246, 0.25); border-color: var(--cia-a); color: var(--cia-a); }
 
-        /* Cartes de typologie cliquables */
         .typology-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
         .typology-card { background: var(--bg-card); border: 1px solid var(--border); padding: 20px; border-radius: 12px; display: flex; flex-direction: column; gap: 10px; cursor: pointer; transition: transform 0.2s, border-color 0.2s; }
         .typology-card:hover { transform: translateY(-3px); border-color: var(--accent); }
@@ -229,7 +218,6 @@
         .filter-banner { background: rgba(59, 130, 246, 0.15); border: 1px solid var(--accent); padding: 10px 15px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; font-size: 0.9rem; }
         .policy-box { display: flex; gap: 15px; align-items: center; background: var(--bg-main); padding: 15px; border-radius: 8px; border: 1px solid var(--border); margin-top: 10px; }
 
-        /* Modal Overlay pour les plans détaillés */
         #plan-modal-overlay {
             position: fixed;
             top: 0; left: 0; width: 100vw; height: 100vh;
@@ -593,9 +581,8 @@
         let currentTypologyFilter = null;
         let selectedCellCoords = null;
 
-        // Variables pour la modale des plans
         let activeModalRiskIndex = null;
-        let activeModalPlanType = null; // 'preventionText', 'continuityText', 'praText'
+        let activeModalPlanType = null;
 
         function launchAppFromLanding() {
             document.getElementById('landing-view').style.display = 'none';
@@ -723,7 +710,6 @@
 
         function getRiskLevel(prob, impact) {
             const type = getCellType(prob, impact);
-            const score = prob * impact;
             if (type === 'high') return { label: 'Critique / Élevé', color: 'var(--danger)', weight: 3 };
             if (type === 'med') return { label: 'Moyen', color: 'var(--warning)', weight: 2 };
             return { label: 'Faible', color: 'var(--success)', weight: 1 };
@@ -768,7 +754,6 @@
             renderApp();
         }
 
-        // --- GESTION DES MODALES DE PLANS (Prévention, Continuité, PRA) ---
         function openPlanModal(index, planType) {
             activeModalRiskIndex = index;
             activeModalPlanType = planType;
@@ -777,7 +762,7 @@
             const titles = {
                 'preventionText': 'Plan de Prévention',
                 'continuityText': 'Plan de Continuité',
-                'praText': 'Plan de Reprise d'Activité (PRA)'
+                'praText': "Plan de Reprise d'Activité (PRA)"
             };
 
             document.getElementById('modal-plan-title').textContent = `${titles[planType]} — ${r.title}`;
@@ -810,38 +795,21 @@
             }
 
             const r = risks[activeModalRiskIndex];
-            const planNames = {
-                'preventionText': 'Plan de Prévention (mesures amont, barrières techniques et organisationnelles)',
-                'continuityText': 'Plan de Continuité (maintien du service en mode dégradé)',
-                'praText': 'Plan de Reprise d'Activité - PRA (restauration complète et sécurisée après incident)'
-            };
-
-            // Simulation d'assistance intelligente contextuelle
-            let generatedSuggestion = `[Assistant ${settings.aiProvider.toUpperCase()} - Suggestions contextuelles]
-`;
-            generatedSuggestion += `Scénario : ${r.title} sur l'actif "${r.asset || 'Système global'}"
-`;
-            generatedSuggestion += `Contexte entreprise : ${companyContext || 'Standard'}
-
-`;
+            let generatedSuggestion = `[Assistant ${settings.aiProvider.toUpperCase()} - Suggestions contextuelles]\n`;
+            generatedSuggestion += `Scénario : ${r.title} sur l'actif "${r.asset || 'Système global'}"\n`;
+            generatedSuggestion += `Contexte entreprise : ${companyContext || 'Standard'}\n\n`;
             
             if (activeModalPlanType === 'preventionText') {
-                generatedSuggestion += `1. Audit et durcissement des accès sur ${r.asset || 'l'actif'}.
-`;
-                generatedSuggestion += `2. Mise en place d'alertes automatisées de détection précoce.
-`;
+                generatedSuggestion += `1. Audit et durcissement des accès sur ${r.asset || "l'actif"}.\n`;
+                generatedSuggestion += `2. Mise en place d'alertes automatisées de détection précoce.\n`;
                 generatedSuggestion += `3. Formation ciblée du propriétaire (${r.owner}) et des équipes impliquées.`;
             } else if (activeModalPlanType === 'continuityText') {
-                generatedSuggestion += `1. Activation immédiate du canal de communication de crise.
-`;
-                generatedSuggestion += `2. Bascule sur l'infrastructure de secours redondante.
-`;
+                generatedSuggestion += `1. Activation immédiate du canal de communication de crise.\n`;
+                generatedSuggestion += `2. Bascule sur l'infrastructure de secours redondante.\n`;
                 generatedSuggestion += `3. Gel des opérations non critiques pour préserver les ressources.`;
             } else {
-                generatedSuggestion += `1. Isolation stricte de l'environnement compromis.
-`;
-                generatedSuggestion += `2. Intégrité des données vérifiée via les sauvegardes hors-ligne.
-`;
+                generatedSuggestion += `1. Isolation stricte de l'environnement compromis.\n`;
+                generatedSuggestion += `2. Intégrité des données vérifiée via les sauvegardes hors-ligne.\n`;
                 generatedSuggestion += `3. Procédure de validation post-reprise avant réouverture aux utilisateurs.`;
             }
 
@@ -908,9 +876,8 @@
                 return;
             }
 
-            let csvContent = "﻿"; 
-            csvContent += "Date,Intitule du Risque,Actif impacte,Proprietaire,Confidentialite,Integrite,Disponibilite,Probabilite,Impact,Score,Niveau de Criticite,Plan de Prevention,Plan de Continuite,PRA
-";
+            let csvContent = "\uFEFF"; 
+            csvContent += "Date,Intitule du Risque,Actif impacte,Proprietaire,Confidentialite,Integrite,Disponibilite,Probabilite,Impact,Score,Niveau de Criticite,Plan de Prevention,Plan de Continuite,PRA\n";
 
             risks.forEach(r => {
                 const score = r.prob * r.impact;
@@ -926,8 +893,7 @@
                 const cont = `"${(r.continuityText || '').replace(/"/g, '""')}"`;
                 const pra = `"${(r.praText || '').replace(/"/g, '""')}"`;
 
-                csvContent += `${date},${title},${asset},${owner},${cVal},${iVal},${aVal},${r.prob},${r.impact},${score},"${crit}",${prev},${cont},${pra}
-`;
+                csvContent += `${date},${title},${asset},${owner},${cVal},${iVal},${aVal},${r.prob},${r.impact},${score},"${crit}",${prev},${cont},${pra}\n`;
             });
 
             const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -948,9 +914,7 @@
             reader.onload = function(e) {
                 try {
                     const text = e.target.result;
-                    const lines = text.split(/
-|
-/);
+                    const lines = text.split(/\r\n|\n/);
                     if (lines.length < 2) {
                         alert("Le fichier CSV semble vide ou invalide.");
                         return;
@@ -1055,7 +1019,6 @@
                 const iClass = r.cia.i ? 'active-i' : '';
                 const aClass = r.cia.a ? 'active-a' : '';
 
-                // Statuts des plans interactifs
                 const hasPrev = r.preventionText && r.preventionText.trim().length > 0;
                 const hasCont = r.continuityText && r.continuityText.trim().length > 0;
                 const hasPra = r.praText && r.praText.trim().length > 0;
