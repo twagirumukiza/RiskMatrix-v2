@@ -156,7 +156,7 @@
 
     <sidebar>
         <div class="sidebar-top">
-            <div class="logo-area">Risk Matrix <span>V1.4</span></div>
+            <div class="logo-area">Risk Matrix <span>V1.5</span></div>
             <ul class="nav-links">
                 <li id="nav-dashboard" class="active" onclick="switchView('dashboard')">Tableau de Bord & Matrice</li>
                 <li id="nav-register" onclick="switchView('register')">Registre des Risques</li>
@@ -444,7 +444,14 @@
             });
         }
 
-        function updateRiskField(index, field, value) {
+        // Modification ici : Enregistrement direct des données en mémoire sans re-render immédiat (évite la perte du clavier)
+        function handleInputLive(index, field, value) {
+            risks[index][field] = value;
+            localStorage.setItem('risk_matrix_risks', JSON.stringify(risks));
+        }
+
+        // Validation finale déclenchée au "blur" (quand on clique ailleurs) ou sur "Enter"
+        function commitRiskChange(index, field, value) {
             if (field === 'prob' || field === 'impact') {
                 risks[index][field] = parseInt(value);
             } else {
@@ -534,7 +541,7 @@
                 return;
             }
 
-            let csvContent = "\uFEFF"; // BOM UTF-8 pour Excel
+            let csvContent = "\uFEFF"; 
             csvContent += "Date,Intitule du Risque,Actif impacte,Proprietaire,Confidentialite,Integrite,Disponibilite,Probabilite,Impact,Score,Niveau de Criticite,Plan de prevention,Plan de continuite,PRA\n";
 
             risks.forEach(r => {
@@ -602,16 +609,25 @@
                 tbody.innerHTML += `
                     <tr>
                         <td>
-                            <input type="date" class="input-text" value="${r.date || ''}" onchange="updateRiskField(${realIndex}, 'date', this.value)" style="width: 130px;">
+                            <input type="date" class="input-text" value="${r.date || ''}" onchange="commitRiskChange(${realIndex}, 'date', this.value)" style="width: 130px;">
                         </td>
                         <td>
-                            <input type="text" class="input-text" value="${r.title}" oninput="updateRiskField(${realIndex}, 'title', this.value)" style="min-width: 150px;">
+                            <input type="text" class="input-text" value="${r.title}" 
+                                oninput="handleInputLive(${realIndex}, 'title', this.value)" 
+                                onkeydown="if(event.key === 'Enter') { this.blur(); }" 
+                                onblur="commitRiskChange(${realIndex}, 'title', this.value)" style="min-width: 150px;">
                         </td>
                         <td>
-                            <input type="text" class="input-text" value="${r.asset || ''}" oninput="updateRiskField(${realIndex}, 'asset', this.value)" placeholder="Actif..." style="min-width: 140px;">
+                            <input type="text" class="input-text" value="${r.asset || ''}" 
+                                oninput="handleInputLive(${realIndex}, 'asset', this.value)" 
+                                onkeydown="if(event.key === 'Enter') { this.blur(); }" 
+                                onblur="commitRiskChange(${realIndex}, 'asset', this.value)" placeholder="Actif..." style="min-width: 140px;">
                         </td>
                         <td>
-                            <input type="text" class="input-text" value="${r.owner}" oninput="updateRiskField(${realIndex}, 'owner', this.value)" style="width: 110px;">
+                            <input type="text" class="input-text" value="${r.owner}" 
+                                oninput="handleInputLive(${realIndex}, 'owner', this.value)" 
+                                onkeydown="if(event.key === 'Enter') { this.blur(); }" 
+                                onblur="commitRiskChange(${realIndex}, 'owner', this.value)" style="width: 110px;">
                         </td>
                         <td style="text-align: center;">
                             <div class="cia-group">
@@ -621,12 +637,12 @@
                             </div>
                         </td>
                         <td>
-                            <select class="select-val" onchange="updateRiskField(${realIndex}, 'prob', this.value);">
+                            <select class="select-val" onchange="commitRiskChange(${realIndex}, 'prob', this.value);">
                                 ${probOptions}
                             </select>
                         </td>
                         <td>
-                            <select class="select-val" onchange="updateRiskField(${realIndex}, 'impact', this.value);">
+                            <select class="select-val" onchange="commitRiskChange(${realIndex}, 'impact', this.value);">
                                 ${impactOptions}
                             </select>
                         </td>
