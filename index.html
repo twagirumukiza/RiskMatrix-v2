@@ -99,11 +99,14 @@
             color: var(--success);
         }
 
-        /* Cartes de typologie */
+        /* Cartes de typologie cliquables */
         .typology-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
-        .typology-card { background: var(--bg-card); border: 1px solid var(--border); padding: 20px; border-radius: 12px; display: flex; flex-direction: column; gap: 10px; }
+        .typology-card { background: var(--bg-card); border: 1px solid var(--border); padding: 20px; border-radius: 12px; display: flex; flex-direction: column; gap: 10px; cursor: pointer; transition: transform 0.2s, border-color 0.2s; }
+        .typology-card:hover { transform: translateY(-3px); border-color: var(--accent); }
         .typology-card h3 { font-size: 1.1rem; color: var(--accent); }
         .typology-card p { font-size: 0.9rem; color: var(--text-muted); line-height: 1.5; }
+
+        .filter-banner { background: rgba(59, 130, 246, 0.15); border: 1px solid var(--accent); padding: 10px 15px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; font-size: 0.9rem; }
 
         .policy-box { display: flex; gap: 15px; align-items: center; background: var(--bg-main); padding: 15px; border-radius: 8px; border: 1px solid var(--border); margin-top: 10px; }
     </style>
@@ -112,7 +115,7 @@
 
     <sidebar>
         <div class="sidebar-top">
-            <div class="logo-area">SolveFlow <span>V0.6</span></div>
+            <div class="logo-area">SolveFlow <span>V0.7</span></div>
             <ul class="nav-links">
                 <li id="nav-dashboard" class="active" onclick="switchView('dashboard')">Tableau de Bord & Matrice</li>
                 <li id="nav-register" onclick="switchView('register')">Registre des Risques</li>
@@ -165,6 +168,11 @@
 
             <!-- VUE 2 : REGISTRE DES RISQUES -->
             <div id="view-register" class="view-section">
+                <div id="active-filter-banner" style="display: none;" class="filter-banner">
+                    <span id="filter-banner-text">Filtre actif</span>
+                    <button class="btn" style="padding: 4px 10px; font-size: 0.8rem;" onclick="clearTypologyFilter()">Voir tous les risques</button>
+                </div>
+
                 <div class="toolbar">
                     <input type="text" id="search-input" oninput="renderApp()" placeholder="Rechercher un risque..." style="padding: 10px 14px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; color: white; width: 300px;">
                     <button class="btn" onclick="nouveauRisqueModal()">+ Nouveau Risque</button>
@@ -194,30 +202,31 @@
                 </div>
             </div>
 
-            <!-- VUE 3 : TYPOLOGIE DES RISQUES (NOUVEAU) -->
+            <!-- VUE 3 : TYPOLOGIE DES RISQUES -->
             <div id="view-typology" class="view-section">
+                <div style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: -10px;">Cliquez sur l'une des catégories ci-dessous pour afficher instantanément les risques associés dans le registre :</div>
                 <div class="typology-grid">
-                    <div class="typology-card">
+                    <div class="typology-card" onclick="filterByTypology('perturbateur')">
                         <h3>Les risques perturbateurs</h3>
                         <p>Un risque extrêmement probable mais de très faible gravité, c’est un problème à résoudre. Si vous ne le faites pas, vous vous exposez à des perturbations régulières qui, même si leur impact est très faible, viendront parasiter le déroulement de votre projet.</p>
                         <p>Ils peuvent avoir un impact important sur les ressources impliquées dans le projet et sur la sécurisation des délais.</p>
                         <p><strong>Action :</strong> Identifiez les causes de ce risque et supprimez-les.</p>
                     </div>
 
-                    <div class="typology-card">
+                    <div class="typology-card" onclick="filterByTypology('négligeable')">
                         <h3>Les risques négligeables</h3>
                         <p>Un événement très peu probable et avec un impact minimal sur le projet ne devrait pas vous inquiéter. Si vous avez identifié un risque que vous positionnez en bas à gauche de votre matrice, considérez qu’il est négligeable.</p>
                         <p><strong>Action :</strong> Ne tenez pas compte des risques négligeables.</p>
                     </div>
 
-                    <div class="typology-card">
+                    <div class="typology-card" onclick="filterByTypology('gravité')">
                         <h3>Les risques de gravité</h3>
                         <p>Un risque de gravité représente un événement qui serait dramatique mais qui a très peu de chances de se produire. Par exemple, qu’une météorite vienne décimer votre équipe projet est toujours possible. Vous n’envisagez pas de changer de planète pour autant.</p>
                         <p>Vous devrez vivre avec les risques de gravité, d’autant qu’une parade ne sera pas toujours possible.</p>
                         <p><strong>Action :</strong> Ne tenez pas compte des risques de gravité.</p>
                     </div>
 
-                    <div class="typology-card">
+                    <div class="typology-card" onclick="filterByTypology('intolérable')">
                         <h3>Les risques intolérables</h3>
                         <p>Un risque très probable et extrêmement grave est en soi un problème sérieux. « Intolérable » signifie que le projet n’est pas acceptable avec ce niveau de risque. Sans moyen d’action identifié pour réduire la criticité, vous pourrez être amené à refuser le projet.</p>
                         <p><strong>Action :</strong> Il est aussi possible de modifier le projet afin de faire disparaître ce risque.</p>
@@ -280,6 +289,8 @@
             localStorage.setItem('solveflow_context', e.target.value);
         });
 
+        let currentTypologyFilter = null;
+
         function updatePolicy() {
             policy.high = parseInt(document.getElementById('threshold-high').value) || 12;
             policy.med = parseInt(document.getElementById('threshold-med').value) || 6;
@@ -305,7 +316,7 @@
                 document.getElementById('nav-typology').classList.add('active');
                 document.getElementById('view-typology').classList.add('active-view');
                 document.getElementById('page-title').textContent = "Typologie des Risques";
-                document.getElementById('page-subtitle').textContent = "Guide pédagogique : perturbateurs, négligeables, de gravité et intolérables.";
+                document.getElementById('page-subtitle').textContent = "Guide pédagogique : cliquez sur une catégorie pour afficher ses risques.";
             } else if (viewName === 'ai') {
                 document.getElementById('nav-ai').classList.add('active');
                 document.getElementById('view-ai').classList.add('active-view');
@@ -320,6 +331,40 @@
             if (score >= policy.high) return 'high';
             if (score >= policy.med) return 'med';
             return 'low';
+        }
+
+        // Logique de classification automatique selon les définitions de vos images :
+        // - Perturbateur : Probabilité forte (P >= 4) et Impact faible (I <= 2)
+        // - Négligeable : Bas à gauche (P <= 2 et I <= 2)
+        // - Gravité : Très peu probable (P <= 2) et Impact fort (I >= 4)
+        // - Intolérable : Très probable et extrêmement grave (Carré supérieur droit ou P >= 4 et I >= 4)
+        function getTypology(prob, impact) {
+            if (prob >= 4 && impact >= 4) return 'intolérable';
+            if (prob >= 4 && impact <= 2) return 'perturbateur';
+            if (prob <= 2 && impact <= 2) return 'négligeable';
+            if (prob <= 2 && impact >= 4) return 'gravité';
+            
+            // Cas intermédiaires rattachés par proximité logique
+            if (prob >= 4) return 'perturbateur';
+            if (impact >= 4) return 'gravité';
+            return 'négligeable';
+        }
+
+        function filterByTypology(type) {
+            currentTypologyFilter = type;
+            switchView('register');
+            renderApp();
+
+            const banner = document.getElementById('active-filter-banner');
+            const bannerText = document.getElementById('filter-banner-text');
+            banner.style.display = 'flex';
+            bannerText.innerHTML = `Filtre actif sur la typologie : <strong style="text-transform: capitalize; margin-left: 5px;">${type}</strong>`;
+        }
+
+        function clearTypologyFilter() {
+            currentTypologyFilter = null;
+            document.getElementById('active-filter-banner').style.display = 'none';
+            renderApp();
         }
 
         function getRiskLevel(prob, impact) {
@@ -369,7 +414,11 @@
             const searchVal = document.getElementById('search-input') ? document.getElementById('search-input').value.toLowerCase() : '';
             tbody.innerHTML = '';
 
-            const filteredRisks = risks.filter(r => r.title.toLowerCase().includes(searchVal) || r.owner.toLowerCase().includes(searchVal) || (r.asset && r.asset.toLowerCase().includes(searchVal)));
+            let filteredRisks = risks.filter(r => {
+                const matchesSearch = r.title.toLowerCase().includes(searchVal) || r.owner.toLowerCase().includes(searchVal) || (r.asset && r.asset.toLowerCase().includes(searchVal));
+                const matchesTypology = currentTypologyFilter ? getTypology(r.prob, r.impact) === currentTypologyFilter : true;
+                return matchesSearch && matchesTypology;
+            });
 
             filteredRisks.forEach((r) => {
                 const score = r.prob * r.impact;
