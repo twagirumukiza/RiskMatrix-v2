@@ -93,7 +93,7 @@
         /* Actions & Table */
         .toolbar { display: flex; justify-content: space-between; align-items: center; gap: 15px; flex-wrap: wrap; }
         .toolbar-left { display: flex; gap: 10px; align-items: center; flex: 1; min-width: 280px; }
-        .toolbar-right { display: flex; gap: 10px; align-items: center; }
+        .toolbar-right { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
         
         .btn { background: var(--accent); color: white; border: none; padding: 10px 18px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 6px; }
         .btn:hover { background: var(--accent-hover); }
@@ -166,7 +166,7 @@
 
     <sidebar>
         <div class="sidebar-top">
-            <div class="logo-area">Risk Matrix <span>V1.6</span></div>
+            <div class="logo-area">Risk Matrix <span>V1.7</span></div>
             <ul class="nav-links">
                 <li id="nav-dashboard" class="active" onclick="switchView('dashboard')">Tableau de Bord & Matrice</li>
                 <li id="nav-register" onclick="switchView('register')">Registre des Risques</li>
@@ -238,6 +238,8 @@
                         <input type="text" id="search-input" oninput="renderApp()" placeholder="Rechercher un risque..." style="padding: 10px 14px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; color: var(--text-main); width: 100%;">
                     </div>
                     <div class="toolbar-right">
+                        <input type="file" id="import-file-input" accept=".csv" style="display: none;" onchange="importFromCSV(event)">
+                        <button class="btn btn-secondary" onclick="document.getElementById('import-file-input').click()">📂 Importer un CSV</button>
                         <button class="btn btn-secondary" onclick="exportToCSV()">📥 Exporter en CSV</button>
                         <button class="btn" onclick="nouveauRisqueModal()">+ Nouveau Risque</button>
                     </div>
@@ -334,7 +336,7 @@
                 </div>
             </div>
 
-            <!-- VUE 5 : PARAMÈTRES (NOUVEL ONGLET) -->
+            <!-- VUE 5 : PARAMÈTRES -->
             <div id="view-settings" class="view-section">
                 <div style="background: var(--bg-card); border: 1px solid var(--border); padding: 25px; border-radius: 12px; display: flex; flex-direction: column; gap: 25px;">
                     <div>
@@ -403,7 +405,6 @@
 
         let settings = JSON.parse(localStorage.getItem('risk_matrix_settings')) || { theme: 'dark', fontSize: '14px', aiProvider: 'none', apiKey: '' };
         
-        // Appliquer les paramètres enregistrés au démarrage
         document.getElementById('setting-theme').value = settings.theme;
         document.getElementById('setting-fontsize').value = settings.fontSize;
         document.getElementById('setting-ai-provider').value = settings.aiProvider;
@@ -681,6 +682,94 @@
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
+        }
+
+        function importFromCSV(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const text = e.target.result;
+                    const lines = text.split(/\r\n|\n/);
+                    if (lines.length < 2) {
+                        alert("Le fichier CSV semble vide ou invalide.");
+                        return;
+                    }
+
+                    let newRisks = [];
+                    // On commence à i=1 pour sauter l'en-tête
+                    for (let i = 1; i < lines.length; i++) {
+                        let line = lines[i].trim();
+                        if (!line) continue;
+
+                        // Parse simple gérant les guillemets de base du CSV
+                        let row = [];
+                        let inQuotes = false;
+                        let entry = '';
+                        for (let char of line) {
+                            if (char === '"') {
+                                inQuotes = !inQuotes;
+                            } else if (char === ',' && !inQuotes) {
+                                row.push(entry);
+                                entry = '';
+                            } else {
+                                entry += char;
+                            }
+                        }
+                        row.push(entry);
+
+                        if (row.length >= 11) {
+                            let date = row[0] || new Date().toISOString().split('T')[0];
+                            let title = row[1] ? row[1].replace(/^"|"$/g, '').replace(/""/g, '"') : "Sans titre";
+                            let asset = row[2] ? row[2].replace(/^"|"$/g, '').replace(/""/g, '"') : "";
+                            let owner = row[3] ? row[3].replace(/^"|"$/g, '').replace(/""/g, '"') : "RSSI";
+                            let cVal = row[4] ? row[4].trim() === 'Oui' : false;
+                            let iVal = row[5] ? row[5].trim() === 'Oui' : false;
+                            let aVal = row[6] ? row[6].trim() === 'Oui' : false;
+                            let prob = parseInt(row[7]) || 3;
+                            let impact = parseInt(row[8]) || 3;
+                            let prevention = row[11] ? row[11].trim() === 'Oui' : false;
+                            let continuity = row[12] ? row[12].trim() === 'Oui' : false;
+                            let pra = row[13] ? row[13].trim() === 'Oui' : false;
+
+                            newRisks.push({
+                                id: Date.now() + i,
+                                date,
+                                title,
+                                asset,
+                                owner,
+                                cia: { c: cVal, i: iVal, a: aVal },
+                                prob,
+                                impact,
+                                prevention,
+                                continuity,
+                                pra
+                            });
+                        }
+                    }
+
+                    if (newRisks.length > 0) {
+                        if (confirm(`Voulez-vous remplacer les risques actuels par les ${newRisks.length} risques du fichier importé ? (Cliquez sur Annuler pour les fusionner)`)) {
+                            risks = newRisks;
+                        } else {
+                            risks = risks.concat(newRisks);
+                        }
+                        sortRisks();
+                        renderApp();
+                        alert("Importation réussie avec succès !");
+                    } else {
+                        alert("Aucune donnée valide n'a pu être lue dans ce fichier.");
+                    }
+                } catch (err) {
+                    console.error(err);
+                    alert("Erreur lors de la lecture du fichier CSV.");
+                }
+                // Reset l'input file pour permettre de re-sélectionner le même fichier si besoin
+                event.target.value = '';
+            };
+            reader.readAsText(file);
         }
 
         function renderApp() {
