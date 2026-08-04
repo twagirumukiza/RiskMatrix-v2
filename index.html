@@ -151,7 +151,15 @@
         .btn-secondary:hover { background: var(--border); }
         .btn-lg { padding: 14px 28px; font-size: 1rem; border-radius: 10px; }
         
-        .table-container { width: 100%; overflow-x: auto; background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border); }
+        /* CORRECTION DU SCROLL HORIZONTAL */
+        .table-container { 
+            width: 100%; 
+            overflow-x: auto; 
+            background: var(--bg-card); 
+            border-radius: 12px; 
+            border: 1px solid var(--border); 
+            -webkit-overflow-scrolling: touch;
+        }
         table { width: 100%; border-collapse: collapse; min-width: 1250px; }
         th, td { padding: 14px 16px; text-align: left; border-bottom: 1px solid var(--border); font-size: 0.85rem; vertical-align: middle; }
         th { background: rgba(255,255,255,0.02); color: var(--text-muted); white-space: nowrap; }
@@ -218,7 +226,7 @@
     <!-- LANDING PAGE (Page Vitrine d'accueil) -->
     <div id="landing-view">
         <div style="text-align: left; font-weight: bold; font-size: 1.2rem; display: flex; align-items: center; gap: 10px;">
-            Risk Matrix <span>V1.8</span>
+            Risk Matrix <span>V1.9</span>
         </div>
 
         <div class="landing-hero">
@@ -253,7 +261,7 @@
     <div id="app-container">
         <sidebar>
             <div class="sidebar-top">
-                <div class="logo-area" style="cursor: pointer;" onclick="returnToLanding()" title="Retour à l'accueil">Risk Matrix <span>V1.8</span></div>
+                <div class="logo-area" style="cursor: pointer;" onclick="returnToLanding()" title="Retour à l'accueil">Risk Matrix <span>V1.9</span></div>
                 <ul class="nav-links">
                     <li id="nav-dashboard" class="active" onclick="switchView('dashboard')">Tableau de Bord & Matrice</li>
                     <li id="nav-register" onclick="switchView('register')">Registre des Risques</li>
