@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SolveFlow - Gestion Avancée des Risques</title>
+    <title>Risk Matrix - Gestion Avancée des Risques</title>
     <style>
         :root {
             --bg-main: #0f172a;
@@ -115,7 +115,7 @@
 
     <sidebar>
         <div class="sidebar-top">
-            <div class="logo-area">SolveFlow <span>V0.7</span></div>
+            <div class="logo-area">Risk Matrix <span>V1.0</span></div>
             <ul class="nav-links">
                 <li id="nav-dashboard" class="active" onclick="switchView('dashboard')">Tableau de Bord & Matrice</li>
                 <li id="nav-register" onclick="switchView('register')">Registre des Risques</li>
@@ -272,21 +272,21 @@
     </main>
 
     <script>
-        let risks = JSON.parse(localStorage.getItem('solveflow_risks')) || [
+        let risks = JSON.parse(localStorage.getItem('risk_matrix_risks')) || [
             { id: 1, date: "2026-01-10", title: "Fishing", asset: "Boîte mail collaborateurs", owner: "RSSI", prob: 5, impact: 5, prevention: true, continuity: false, pra: false },
             { id: 2, date: "2026-02-15", title: "Erreur humaine", asset: "Base de données prod", owner: "RH", prob: 3, impact: 4, prevention: false, continuity: true, pra: true },
             { id: 3, date: "2026-03-01", title: "L homme du milieu", asset: "Passerelle réseau", owner: "Équipe Sécurité", prob: 5, impact: 4, prevention: true, continuity: true, pra: true }
         ];
 
-        let policy = JSON.parse(localStorage.getItem('solveflow_policy')) || { high: 12, med: 6 };
+        let policy = JSON.parse(localStorage.getItem('risk_matrix_policy')) || { high: 12, med: 6 };
         document.getElementById('threshold-high').value = policy.high;
         document.getElementById('threshold-med').value = policy.med;
 
-        let companyContext = localStorage.getItem('solveflow_context') || "";
+        let companyContext = localStorage.getItem('risk_matrix_context') || "";
         document.getElementById('company-context').value = companyContext;
 
         document.getElementById('company-context').addEventListener('input', (e) => {
-            localStorage.setItem('solveflow_context', e.target.value);
+            localStorage.setItem('risk_matrix_context', e.target.value);
         });
 
         let currentTypologyFilter = null;
@@ -294,7 +294,7 @@
         function updatePolicy() {
             policy.high = parseInt(document.getElementById('threshold-high').value) || 12;
             policy.med = parseInt(document.getElementById('threshold-med').value) || 6;
-            localStorage.setItem('solveflow_policy', JSON.stringify(policy));
+            localStorage.setItem('risk_matrix_policy', JSON.stringify(policy));
             renderApp();
         }
 
@@ -333,18 +333,12 @@
             return 'low';
         }
 
-        // Logique de classification automatique selon les définitions de vos images :
-        // - Perturbateur : Probabilité forte (P >= 4) et Impact faible (I <= 2)
-        // - Négligeable : Bas à gauche (P <= 2 et I <= 2)
-        // - Gravité : Très peu probable (P <= 2) et Impact fort (I >= 4)
-        // - Intolérable : Très probable et extrêmement grave (Carré supérieur droit ou P >= 4 et I >= 4)
         function getTypology(prob, impact) {
             if (prob >= 4 && impact >= 4) return 'intolérable';
             if (prob >= 4 && impact <= 2) return 'perturbateur';
             if (prob <= 2 && impact <= 2) return 'négligeable';
             if (prob <= 2 && impact >= 4) return 'gravité';
             
-            // Cas intermédiaires rattachés par proximité logique
             if (prob >= 4) return 'perturbateur';
             if (impact >= 4) return 'gravité';
             return 'négligeable';
@@ -381,14 +375,14 @@
             } else {
                 risks[index][field] = value;
             }
-            localStorage.setItem('solveflow_risks', JSON.stringify(risks));
+            localStorage.setItem('risk_matrix_risks', JSON.stringify(risks));
             renderMatrix();
             updateStats();
         }
 
         function toggleBooleanFlag(index, field) {
             risks[index][field] = !risks[index][field];
-            localStorage.setItem('solveflow_risks', JSON.stringify(risks));
+            localStorage.setItem('risk_matrix_risks', JSON.stringify(risks));
             renderApp();
         }
 
@@ -484,7 +478,7 @@
 
             updateStats();
             renderMatrix();
-            localStorage.setItem('solveflow_risks', JSON.stringify(risks));
+            localStorage.setItem('risk_matrix_risks', JSON.stringify(risks));
         }
 
         function renderMatrix() {
