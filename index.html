@@ -131,7 +131,7 @@
 
     <sidebar>
         <div class="sidebar-top">
-            <div class="logo-area">Risk Matrix <span>V1.2</span></div>
+            <div class="logo-area">Risk Matrix <span>V1.3</span></div>
             <ul class="nav-links">
                 <li id="nav-dashboard" class="active" onclick="switchView('dashboard')">Tableau de Bord & Matrice</li>
                 <li id="nav-register" onclick="switchView('register')">Registre des Risques</li>
@@ -325,6 +325,7 @@
             policy.high = parseInt(document.getElementById('threshold-high').value) || 12;
             policy.med = parseInt(document.getElementById('threshold-med').value) || 6;
             localStorage.setItem('risk_matrix_policy', JSON.stringify(policy));
+            sortRisks();
             renderApp();
         }
 
@@ -377,6 +378,7 @@
         function filterByTypology(type) {
             currentTypologyFilter = type;
             switchView('register');
+            sortRisks();
             renderApp();
 
             const banner = document.getElementById('active-filter-banner');
@@ -388,15 +390,33 @@
         function clearTypologyFilter() {
             currentTypologyFilter = null;
             document.getElementById('active-filter-banner').style.display = 'none';
+            sortRisks();
             renderApp();
         }
 
         function getRiskLevel(prob, impact) {
             const type = getCellType(prob, impact);
             const score = prob * impact;
-            if (type === 'high') return { label: 'Critique / Élevé', color: 'var(--danger)' };
-            if (type === 'med') return { label: 'Moyen', color: 'var(--warning)' };
-            return { label: 'Faible', color: 'var(--success)' };
+            if (type === 'high') return { label: 'Critique / Élevé', color: 'var(--danger)', weight: 3 };
+            if (type === 'med') return { label: 'Moyen', color: 'var(--warning)', weight: 2 };
+            return { label: 'Faible', color: 'var(--success)', weight: 1 };
+        }
+
+        function sortRisks() {
+            risks.sort((a, b) => {
+                const scoreA = a.prob * a.impact;
+                const scoreB = b.prob * b.impact;
+                if (scoreB !== scoreA) {
+                    return scoreB - scoreA; // Du plus grand score au plus petit
+                }
+                // En cas d'égalité de score, on priorise par criticité globale (type) puis par probabilité décroissante
+                const typeA = getRiskLevel(a.prob, a.impact).weight;
+                const typeB = getRiskLevel(b.prob, b.impact).weight;
+                if (typeB !== typeA) {
+                    return typeB - typeA;
+                }
+                return b.prob - a.prob;
+            });
         }
 
         function updateRiskField(index, field, value) {
@@ -405,9 +425,11 @@
             } else {
                 risks[index][field] = value;
             }
+            sortRisks();
             localStorage.setItem('risk_matrix_risks', JSON.stringify(risks));
             renderMatrix();
             updateStats();
+            renderApp();
             if (selectedCellCoords) {
                 showCellDetails(selectedCellCoords.x, selectedCellCoords.y);
             }
@@ -478,7 +500,6 @@
                 return;
             }
 
-            // En-têtes CSV
             let csvContent = "\uFEFF"; // BOM UTF-8 pour Excel
             csvContent += "Date,Intitule du Risque,Actif impacte,Proprietaire,Probabilite,Impact,Score,Niveau de Criticite,Plan de prevention,Plan de continuite,PRA\n";
 
@@ -551,12 +572,12 @@
                             <input type="text" class="input-text" value="${r.owner}" oninput="updateRiskField(${realIndex}, 'owner', this.value)" style="width: 110px;">
                         </td>
                         <td>
-                            <select class="select-val" onchange="updateRiskField(${realIndex}, 'prob', this.value); renderApp();">
+                            <select class="select-val" onchange="updateRiskField(${realIndex}, 'prob', this.value);">
                                 ${probOptions}
                             </select>
                         </td>
                         <td>
-                            <select class="select-val" onchange="updateRiskField(${realIndex}, 'impact', this.value); renderApp();">
+                            <select class="select-val" onchange="updateRiskField(${realIndex}, 'impact', this.value);">
                                 ${impactOptions}
                             </select>
                         </td>
@@ -630,6 +651,7 @@
                 continuity: false, 
                 pra: false 
             });
+            sortRisks();
             renderApp();
             document.getElementById('ai-scenario-input').value = "";
             alert("Scénario analysé et ajouté au registre avec succès !");
@@ -646,6 +668,7 @@
             const today = new Date().toISOString().split('T')[0];
 
             risks.push({ date: today, title, asset, owner, prob, impact, prevention: false, continuity: false, pra: false });
+            sortRisks();
             renderApp();
             switchView('register');
         }
@@ -656,10 +679,13 @@
                 if (selectedCellCoords) {
                     closeCellDetails();
                 }
+                sortRisks();
                 renderApp();
             }
         }
 
+        // Tri initial au chargement
+        sortRisks();
         renderApp();
     </script>
 </body>
