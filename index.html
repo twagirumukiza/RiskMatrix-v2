@@ -78,9 +78,14 @@
         .risk-detail-item { background: var(--bg-card); padding: 12px; border-radius: 6px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; }
 
         /* Actions & Table */
-        .toolbar { display: flex; justify-content: space-between; align-items: center; }
-        .btn { background: var(--accent); color: white; border: none; padding: 10px 18px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        .toolbar { display: flex; justify-content: space-between; align-items: center; gap: 15px; flex-wrap: wrap; }
+        .toolbar-left { display: flex; gap: 10px; align-items: center; flex: 1; min-width: 280px; }
+        .toolbar-right { display: flex; gap: 10px; align-items: center; }
+        
+        .btn { background: var(--accent); color: white; border: none; padding: 10px 18px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 6px; }
         .btn:hover { background: var(--accent-hover); }
+        .btn-secondary { background: var(--bg-card); border: 1px solid var(--border); color: var(--text-main); }
+        .btn-secondary:hover { background: var(--border); }
         
         .table-container { width: 100%; overflow-x: auto; background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border); }
         table { width: 100%; border-collapse: collapse; min-width: 1100px; }
@@ -126,7 +131,7 @@
 
     <sidebar>
         <div class="sidebar-top">
-            <div class="logo-area">Risk Matrix <span>V1.1</span></div>
+            <div class="logo-area">Risk Matrix <span>V1.2</span></div>
             <ul class="nav-links">
                 <li id="nav-dashboard" class="active" onclick="switchView('dashboard')">Tableau de Bord & Matrice</li>
                 <li id="nav-register" onclick="switchView('register')">Registre des Risques</li>
@@ -193,8 +198,13 @@
                 </div>
 
                 <div class="toolbar">
-                    <input type="text" id="search-input" oninput="renderApp()" placeholder="Rechercher un risque..." style="padding: 10px 14px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; color: white; width: 300px;">
-                    <button class="btn" onclick="nouveauRisqueModal()">+ Nouveau Risque</button>
+                    <div class="toolbar-left">
+                        <input type="text" id="search-input" oninput="renderApp()" placeholder="Rechercher un risque..." style="padding: 10px 14px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; color: white; width: 100%;">
+                    </div>
+                    <div class="toolbar-right">
+                        <button class="btn btn-secondary" onclick="exportToCSV()">📥 Exporter en CSV</button>
+                        <button class="btn" onclick="nouveauRisqueModal()">+ Nouveau Risque</button>
+                    </div>
                 </div>
 
                 <div class="table-container">
@@ -460,6 +470,40 @@
             selectedCellCoords = null;
             document.getElementById('matrix-details-container').style.display = 'none';
             renderMatrix();
+        }
+
+        function exportToCSV() {
+            if (risks.length === 0) {
+                alert("Aucun risque à exporter.");
+                return;
+            }
+
+            // En-têtes CSV
+            let csvContent = "\uFEFF"; // BOM UTF-8 pour Excel
+            csvContent += "Date,Intitule du Risque,Actif impacte,Proprietaire,Probabilite,Impact,Score,Niveau de Criticite,Plan de prevention,Plan de continuite,PRA\n";
+
+            risks.forEach(r => {
+                const score = r.prob * r.impact;
+                const crit = getRiskLevel(r.prob, r.impact).label;
+                const title = `"${(r.title || '').replace(/"/g, '""')}"`;
+                const asset = `"${(r.asset || '').replace(/"/g, '""')}"`;
+                const owner = `"${(r.owner || '').replace(/"/g, '""')}"`;
+                const date = r.date || '';
+                const prev = r.prevention ? 'Oui' : 'Non';
+                const cont = r.continuity ? 'Oui' : 'Non';
+                const pra = r.pra ? 'Oui' : 'Non';
+
+                csvContent += `${date},${title},${asset},${owner},${r.prob},${r.impact},${score},"${crit}",${prev},${cont},${pra}\n`;
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.setAttribute('href', url);
+            link.setAttribute('download', `registre_risques_${new Date().toISOString().split('T')[0]}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         }
 
         function renderApp() {
