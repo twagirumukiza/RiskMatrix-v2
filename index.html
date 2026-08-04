@@ -48,10 +48,12 @@
         /* Matrice 5x5 Container */
         .matrix-section { background: var(--bg-card); border: 1px solid var(--border); padding: 20px; border-radius: 12px; }
         .matrix-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-top: 15px; }
-        .matrix-cell { background: var(--bg-main); border: 1px solid var(--border); height: 80px; border-radius: 6px; padding: 8px; font-size: 0.75rem; display: flex; flex-direction: column; justify-content: space-between; }
-        .matrix-cell.risk-high { background-color: rgba(239, 68, 68, 0.2); border-color: var(--danger); }
-        .matrix-cell.risk-med { background-color: rgba(245, 158, 11, 0.2); border-color: var(--warning); }
-        .matrix-cell.risk-low { background-color: rgba(16, 185, 129, 0.2); border-color: var(--success); }
+        .matrix-cell { background: var(--bg-main); border: 1px solid var(--border); height: 90px; border-radius: 6px; padding: 8px; font-size: 0.75rem; display: flex; flex-direction: column; justify-content: space-between; }
+        
+        /* Couleurs dynamiques de la matrice */
+        .matrix-cell.risk-high { background-color: rgba(239, 68, 68, 0.25); border-color: var(--danger); }
+        .matrix-cell.risk-med { background-color: rgba(245, 158, 11, 0.25); border-color: var(--warning); }
+        .matrix-cell.risk-low { background-color: rgba(16, 185, 129, 0.25); border-color: var(--success); }
 
         /* Actions & Table */
         .toolbar { display: flex; justify-content: space-between; align-items: center; }
@@ -67,16 +69,18 @@
         .select-val:focus, .input-text:focus, .textarea-box:focus { outline: none; border-color: var(--accent); }
         .input-text { width: 100%; font-family: inherit; font-size: 0.9rem; font-weight: normal; }
         .textarea-box { width: 100%; height: 100px; resize: vertical; font-family: inherit; font-size: 0.9rem; font-weight: normal; }
+        
+        .policy-box { display: flex; gap: 15px; align-items: center; background: var(--bg-main); padding: 15px; border-radius: 8px; border: 1px solid var(--border); margin-top: 10px; }
     </style>
 </head>
 <body>
 
     <sidebar>
-        <div class="logo-area">SolveFlow <span>V0.3</span></div>
+        <div class="logo-area">SolveFlow <span>V0.4</span></div>
         <ul class="nav-links">
             <li id="nav-dashboard" class="active" onclick="switchView('dashboard')">Tableau de Bord & Matrice</li>
             <li id="nav-register" onclick="switchView('register')">Registre des Risques</li>
-            <li id="nav-ai" onclick="switchView('ai')">Assistant Analyse IA</li>
+            <li id="nav-ai" onclick="switchView('ai')">Politique & Assistant IA</li>
         </ul>
     </sidebar>
 
@@ -110,7 +114,10 @@
                 </div>
 
                 <div class="matrix-section">
-                    <h3>Matrice de Criticité 5×5</h3>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <h3>Matrice de Criticité 5×5 (Personnalisable)</h3>
+                        <span style="font-size: 0.8rem; color: var(--text-muted);">* Le carré supérieur droit (P≥4 et I≥4) est verrouillé en critique.</span>
+                    </div>
                     <div class="matrix-grid" id="matrix-container"></div>
                 </div>
             </div>
@@ -139,19 +146,34 @@
                 </table>
             </div>
 
-            <!-- VUE 3 : ASSISTANT IA CONTEXTUEL -->
+            <!-- VUE 3 : POLITIQUE & ASSISTANT IA -->
             <div id="view-ai" class="view-section">
                 <div style="background: var(--bg-card); border: 1px solid var(--border); padding: 25px; border-radius: 12px; display: flex; flex-direction: column; gap: 20px;">
                     <div>
+                        <h3>Paramétrage de la Politique de Risque (Seuils)</h3>
+                        <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 4px;">Modifiez le score minimum requis pour basculer un risque en zone moyenne ou élevée (hors carré supérieur droit).</p>
+                        <div class="policy-box">
+                            <div>
+                                <label style="font-size: 0.85rem; color: var(--text-muted);">Seuil Criticité / Élevé (Score min) :</label>
+                                <input type="number" id="threshold-high" class="input-text" style="width: 100px; margin-top: 5px;" value="12" min="1" max="25" onchange="updatePolicy()">
+                            </div>
+                            <div>
+                                <label style="font-size: 0.85rem; color: var(--text-muted);">Seuil Moyen (Score min) :</label>
+                                <input type="number" id="threshold-med" class="input-text" style="width: 100px; margin-top: 5px;" value="6" min="1" max="25" onchange="updatePolicy()">
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr style="border-color: var(--border);">
+
+                    <div>
                         <h3>1. Contexte de l'Entreprise</h3>
-                        <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 4px;">Ces paramètres servent de socle pour calibrer l'évaluation des scénarios.</p>
-                        <textarea id="company-context" class="textarea-box" style="margin-top: 10px;" placeholder="Ex: Entreprise SaaS hébergeant des données de santé, 50 employés, infrastructure cloud AWS, forte exposition réglementaire (HDS / RGPD)..."></textarea>
+                        <textarea id="company-context" class="textarea-box" style="margin-top: 10px;" placeholder="Ex: Entreprise SaaS hébergeant des données de santé..."></textarea>
                     </div>
 
                     <div>
                         <h3>2. Soumettre un Scénario de Menace</h3>
-                        <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 4px;">Décrivez l'événement redouté pour que l'IA déduise la probabilité et l'impact adaptés à votre contexte.</p>
-                        <input type="text" id="ai-scenario-input" class="input-text" style="margin-top: 10px;" placeholder="Ex: Attaque par ransomware bloquant les bases de données clients">
+                        <input type="text" id="ai-scenario-input" class="input-text" style="margin-top: 10px;" placeholder="Ex: Attaque par ransomware...">
                     </div>
 
                     <button class="btn" onclick="runAiAnalysis()">Analyser et intégrer au registre</button>
@@ -163,9 +185,14 @@
 
     <script>
         let risks = JSON.parse(localStorage.getItem('solveflow_risks')) || [
-            { id: 1, title: "Fuite de données clients sur le cloud", owner: "RSSI / DSI", prob: 4, impact: 5 },
-            { id: 2, title: "L homme du milieu", owner: "Équipe Sécurité", prob: 5, impact: 4 }
+            { id: 1, title: "Fishing", owner: "RSSI", prob: 5, impact: 5 },
+            { id: 2, title: "Erreur humaine", owner: "RH", prob: 3, impact: 4 },
+            { id: 3, title: "L homme du milieu", owner: "Équipe Sécurité", prob: 5, impact: 4 }
         ];
+
+        let policy = JSON.parse(localStorage.getItem('solveflow_policy')) || { high: 12, med: 6 };
+        document.getElementById('threshold-high').value = policy.high;
+        document.getElementById('threshold-med').value = policy.med;
 
         let companyContext = localStorage.getItem('solveflow_context') || "";
         document.getElementById('company-context').value = companyContext;
@@ -173,6 +200,13 @@
         document.getElementById('company-context').addEventListener('input', (e) => {
             localStorage.setItem('solveflow_context', e.target.value);
         });
+
+        function updatePolicy() {
+            policy.high = parseInt(document.getElementById('threshold-high').value) || 12;
+            policy.med = parseInt(document.getElementById('threshold-med').value) || 6;
+            localStorage.setItem('solveflow_policy', JSON.stringify(policy));
+            renderApp();
+        }
 
         function switchView(viewName) {
             document.querySelectorAll('.nav-links li').forEach(el => el.classList.remove('active'));
@@ -191,14 +225,26 @@
             } else if (viewName === 'ai') {
                 document.getElementById('nav-ai').classList.add('active');
                 document.getElementById('view-ai').classList.add('active-view');
-                document.getElementById('page-title').textContent = "Assistant Analyse IA Contextuel";
-                document.getElementById('page-subtitle').textContent = "Évaluation intelligente basée sur le profil de l'entreprise.";
+                document.getElementById('page-title').textContent = "Politique & Assistant IA";
+                document.getElementById('page-subtitle').textContent = "Paramétrage des seuils et évaluation contextuelle.";
             }
         }
 
-        function getCriticiteLevel(score) {
-            if (score >= 10) return { label: 'Critique / Élevé', color: 'var(--danger)' };
-            if (score >= 5) return { label: 'Moyen', color: 'var(--warning)' };
+        function getCellType(x, y) {
+            // Carré supérieur droit verrouillé (P >= 4 et I >= 4)
+            if (x >= 4 && y >= 4) return 'high';
+
+            const score = x * y;
+            if (score >= policy.high) return 'high';
+            if (score >= policy.med) return 'med';
+            return 'low';
+        }
+
+        function getRiskLevel(prob, impact) {
+            const type = getCellType(prob, impact);
+            const score = prob * impact;
+            if (type === 'high') return { label: 'Critique / Élevé', color: 'var(--danger)' };
+            if (type === 'med') return { label: 'Moyen', color: 'var(--warning)' };
             return { label: 'Faible', color: 'var(--success)' };
         }
 
@@ -218,9 +264,9 @@
             let critical = 0, medium = 0, low = 0;
 
             risks.forEach((r) => {
-                const score = r.prob * r.impact;
-                if (score >= 10) critical++;
-                else if (score >= 5) medium++;
+                const type = getCellType(r.prob, r.impact);
+                if (type === 'high') critical++;
+                else if (type === 'med') medium++;
                 else low++;
             });
 
@@ -239,7 +285,7 @@
 
             filteredRisks.forEach((r) => {
                 const score = r.prob * r.impact;
-                const crit = getCriticiteLevel(score);
+                const crit = getRiskLevel(r.prob, r.impact);
                 const realIndex = risks.findIndex(item => item === r);
 
                 let probOptions = '';
@@ -282,10 +328,10 @@
 
             for (let y = 5; y >= 1; y--) {
                 for (let x = 1; x <= 5; x++) {
-                    const cellScore = x * y;
+                    const type = getCellType(x, y);
                     let cellClass = 'risk-low';
-                    if (cellScore >= 10) cellClass = 'risk-high';
-                    else if (cellScore >= 5) cellClass = 'risk-med';
+                    if (type === 'high') cellClass = 'risk-high';
+                    else if (type === 'med') cellClass = 'risk-med';
 
                     const matchingRisks = risks.filter(r => r.prob === x && r.impact === y);
                     
@@ -298,35 +344,27 @@
         }
 
         function runAiAnalysis() {
-            const context = document.getElementById('company-context').value;
             const scenario = document.getElementById('ai-scenario-input').value;
-
             if(!scenario) {
                 alert("Veuillez saisir un scénario de menace.");
                 return;
             }
 
-            // Simulation intelligente tenant compte du contexte renseigné
-            // (Attribution dynamique basée sur des mots-clés ou valeurs par défaut cohérentes)
             let prob = 3;
-            let impact = 4;
-            let owner = "RSSI / Équipe Risques";
-
-            if(context.toLowerCase().includes('santé') || context.toLowerCase().includes('cloud')) {
-                impact = 5;
-            }
+            let impact = 3;
+            let owner = "RSSI";
 
             risks.push({ title: scenario, owner: owner, prob: prob, impact: impact });
             renderApp();
             document.getElementById('ai-scenario-input').value = "";
-            alert(`Analyse IA effectuée en prenant en compte le contexte !\n\nScénario ajouté au registre :\n- Probabilité : ${prob}\n- Impact : ${impact}`);
+            alert("Scénario analysé et ajouté au registre avec succès !");
             switchView('register');
         }
 
         function nouveauRisqueModal() {
             const title = prompt("Intitulé du nouveau risque :");
             if(!title) return;
-            const owner = prompt("Propriétaire du risque (ex: RSSI, DSI) :") || "RSSI / DSI";
+            const owner = prompt("Propriétaire du risque :") || "RSSI";
             const prob = parseInt(prompt("Probabilité (1 à 5) :")) || 3;
             const impact = parseInt(prompt("Impact (1 à 5) :")) || 3;
 
