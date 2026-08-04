@@ -63,8 +63,9 @@
         th { background: rgba(255,255,255,0.02); color: var(--text-muted); }
 
         /* Champs éditables */
-        .select-val { background: var(--bg-main); color: white; border: 1px solid var(--border); padding: 6px 10px; border-radius: 6px; font-weight: bold; cursor: pointer; }
-        .select-val:focus { outline: none; border-color: var(--accent); }
+        .select-val, .input-text { background: var(--bg-main); color: white; border: 1px solid var(--border); padding: 6px 10px; border-radius: 6px; font-weight: bold; }
+        .select-val:focus, .input-text:focus { outline: none; border-color: var(--accent); }
+        .input-text { width: 100%; font-family: inherit; font-size: 0.9rem; }
     </style>
 </head>
 <body>
@@ -168,7 +169,7 @@
                 document.getElementById('nav-register').classList.add('active');
                 document.getElementById('view-register').classList.add('active-view');
                 document.getElementById('page-title').textContent = "Registre des Risques";
-                document.getElementById('page-subtitle').textContent = "Modification en direct de la probabilité et de l'impact lors des réunions.";
+                document.getElementById('page-subtitle').textContent = "Modification en direct du propriétaire, de la probabilité et de l'impact.";
             } else if (viewName === 'ai') {
                 document.getElementById('nav-ai').classList.add('active');
                 document.getElementById('view-ai').classList.add('active-view');
@@ -183,20 +184,21 @@
             return { label: 'Faible', color: 'var(--success)' };
         }
 
-        function updateRiskValue(index, field, value) {
-            risks[index][field] = parseInt(value);
-            renderApp();
+        function updateRiskField(index, field, value) {
+            if (field === 'prob' || field === 'impact') {
+                risks[index][field] = parseInt(value);
+            } else {
+                risks[index][field] = value;
+            }
+            localStorage.setItem('solveflow_risks', JSON.stringify(risks));
+            renderMatrix();
+            // Met à jour les stats globales sans redessiner complètement le tableau pour ne pas perturber la saisie en cours
+            updateStats();
         }
 
-        function renderApp() {
-            const tbody = document.getElementById('risk-table-body');
-            const searchVal = document.getElementById('search-input') ? document.getElementById('search-input').value.toLowerCase() : '';
-            tbody.innerHTML = '';
-
+        function updateStats() {
             let total = risks.length;
             let critical = 0, medium = 0, low = 0;
-
-            const filteredRisks = risks.filter(r => r.title.toLowerCase().includes(searchVal) || r.owner.toLowerCase().includes(searchVal));
 
             risks.forEach((r) => {
                 const score = r.prob * r.impact;
@@ -204,6 +206,19 @@
                 else if (score >= 5) medium++;
                 else low++;
             });
+
+            document.getElementById('stat-total').textContent = total;
+            document.getElementById('stat-critical').textContent = critical;
+            document.getElementById('stat-medium').textContent = medium;
+            document.getElementById('stat-low').textContent = low;
+        }
+
+        function renderApp() {
+            const tbody = document.getElementById('risk-table-body');
+            const searchVal = document.getElementById('search-input') ? document.getElementById('search-input').value.toLowerCase() : '';
+            tbody.innerHTML = '';
+
+            const filteredRisks = risks.filter(r => r.title.toLowerCase().includes(searchVal) || r.owner.toLowerCase().includes(searchVal));
 
             filteredRisks.forEach((r) => {
                 const score = r.prob * r.impact;
@@ -220,14 +235,16 @@
                 tbody.innerHTML += `
                     <tr>
                         <td>${r.title}</td>
-                        <td>${r.owner}</td>
                         <td>
-                            <select class="select-val" onchange="updateRiskValue(${realIndex}, 'prob', this.value)">
+                            <input type="text" class="input-text" value="${r.owner}" oninput="updateRiskField(${realIndex}, 'owner', this.value)">
+                        </td>
+                        <td>
+                            <select class="select-val" onchange="updateRiskField(${realIndex}, 'prob', this.value); renderApp();">
                                 ${probOptions}
                             </select>
                         </td>
                         <td>
-                            <select class="select-val" onchange="updateRiskValue(${realIndex}, 'impact', this.value)">
+                            <select class="select-val" onchange="updateRiskField(${realIndex}, 'impact', this.value); renderApp();">
                                 ${impactOptions}
                             </select>
                         </td>
@@ -237,11 +254,7 @@
                 `;
             });
 
-            document.getElementById('stat-total').textContent = total;
-            document.getElementById('stat-critical').textContent = critical;
-            document.getElementById('stat-medium').textContent = medium;
-            document.getElementById('stat-low').textContent = low;
-
+            updateStats();
             renderMatrix();
             localStorage.setItem('solveflow_risks', JSON.stringify(risks));
         }
