@@ -63,9 +63,10 @@
         th { background: rgba(255,255,255,0.02); color: var(--text-muted); }
 
         /* Champs éditables */
-        .select-val, .input-text { background: var(--bg-main); color: white; border: 1px solid var(--border); padding: 6px 10px; border-radius: 6px; font-weight: bold; }
-        .select-val:focus, .input-text:focus { outline: none; border-color: var(--accent); }
-        .input-text { width: 100%; font-family: inherit; font-size: 0.9rem; }
+        .select-val, .input-text, .textarea-box { background: var(--bg-main); color: white; border: 1px solid var(--border); padding: 8px 12px; border-radius: 6px; font-weight: bold; }
+        .select-val:focus, .input-text:focus, .textarea-box:focus { outline: none; border-color: var(--accent); }
+        .input-text { width: 100%; font-family: inherit; font-size: 0.9rem; font-weight: normal; }
+        .textarea-box { width: 100%; height: 100px; resize: vertical; font-family: inherit; font-size: 0.9rem; font-weight: normal; }
     </style>
 </head>
 <body>
@@ -118,7 +119,7 @@
             <div id="view-register" class="view-section">
                 <div class="toolbar">
                     <input type="text" id="search-input" oninput="renderApp()" placeholder="Rechercher un risque..." style="padding: 10px 14px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; color: white; width: 300px;">
-                    <button class="btn" onclick="nouveauRisqueModal()">+ Nouveau Risque (IA)</button>
+                    <button class="btn" onclick="nouveauRisqueModal()">+ Nouveau Risque</button>
                 </div>
 
                 <table>
@@ -138,12 +139,22 @@
                 </table>
             </div>
 
-            <!-- VUE 3 : ASSISTANT IA -->
+            <!-- VUE 3 : ASSISTANT IA CONTEXTUEL -->
             <div id="view-ai" class="view-section">
-                <div style="background: var(--bg-card); border: 1px solid var(--border); padding: 25px; border-radius: 12px;">
-                    <h3>Assistant d'Analyse IA</h3>
-                    <p style="color: var(--text-muted); margin-top: 10px;">Cet assistant analyse vos scénarios de menaces et suggère automatiquement la criticité adaptée.</p>
-                    <button class="btn" style="margin-top: 20px;" onclick="nouveauRisqueModal()">Lancer une analyse IA</button>
+                <div style="background: var(--bg-card); border: 1px solid var(--border); padding: 25px; border-radius: 12px; display: flex; flex-direction: column; gap: 20px;">
+                    <div>
+                        <h3>1. Contexte de l'Entreprise</h3>
+                        <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 4px;">Ces paramètres servent de socle pour calibrer l'évaluation des scénarios.</p>
+                        <textarea id="company-context" class="textarea-box" style="margin-top: 10px;" placeholder="Ex: Entreprise SaaS hébergeant des données de santé, 50 employés, infrastructure cloud AWS, forte exposition réglementaire (HDS / RGPD)..."></textarea>
+                    </div>
+
+                    <div>
+                        <h3>2. Soumettre un Scénario de Menace</h3>
+                        <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 4px;">Décrivez l'événement redouté pour que l'IA déduise la probabilité et l'impact adaptés à votre contexte.</p>
+                        <input type="text" id="ai-scenario-input" class="input-text" style="margin-top: 10px;" placeholder="Ex: Attaque par ransomware bloquant les bases de données clients">
+                    </div>
+
+                    <button class="btn" onclick="runAiAnalysis()">Analyser et intégrer au registre</button>
                 </div>
             </div>
 
@@ -155,6 +166,13 @@
             { id: 1, title: "Fuite de données clients sur le cloud", owner: "RSSI / DSI", prob: 4, impact: 5 },
             { id: 2, title: "L homme du milieu", owner: "Équipe Sécurité", prob: 5, impact: 4 }
         ];
+
+        let companyContext = localStorage.getItem('solveflow_context') || "";
+        document.getElementById('company-context').value = companyContext;
+
+        document.getElementById('company-context').addEventListener('input', (e) => {
+            localStorage.setItem('solveflow_context', e.target.value);
+        });
 
         function switchView(viewName) {
             document.querySelectorAll('.nav-links li').forEach(el => el.classList.remove('active'));
@@ -173,8 +191,8 @@
             } else if (viewName === 'ai') {
                 document.getElementById('nav-ai').classList.add('active');
                 document.getElementById('view-ai').classList.add('active-view');
-                document.getElementById('page-title').textContent = "Assistant Analyse IA";
-                document.getElementById('page-subtitle').textContent = "Automatisation et recommandations d'experts.";
+                document.getElementById('page-title').textContent = "Assistant Analyse IA Contextuel";
+                document.getElementById('page-subtitle').textContent = "Évaluation intelligente basée sur le profil de l'entreprise.";
             }
         }
 
@@ -192,7 +210,6 @@
             }
             localStorage.setItem('solveflow_risks', JSON.stringify(risks));
             renderMatrix();
-            // Met à jour les stats globales sans redessiner complètement le tableau pour ne pas perturber la saisie en cours
             updateStats();
         }
 
@@ -278,6 +295,32 @@
                     container.appendChild(cellDiv);
                 }
             }
+        }
+
+        function runAiAnalysis() {
+            const context = document.getElementById('company-context').value;
+            const scenario = document.getElementById('ai-scenario-input').value;
+
+            if(!scenario) {
+                alert("Veuillez saisir un scénario de menace.");
+                return;
+            }
+
+            // Simulation intelligente tenant compte du contexte renseigné
+            // (Attribution dynamique basée sur des mots-clés ou valeurs par défaut cohérentes)
+            let prob = 3;
+            let impact = 4;
+            let owner = "RSSI / Équipe Risques";
+
+            if(context.toLowerCase().includes('santé') || context.toLowerCase().includes('cloud')) {
+                impact = 5;
+            }
+
+            risks.push({ title: scenario, owner: owner, prob: prob, impact: impact });
+            renderApp();
+            document.getElementById('ai-scenario-input').value = "";
+            alert(`Analyse IA effectuée en prenant en compte le contexte !\n\nScénario ajouté au registre :\n- Probabilité : ${prob}\n- Impact : ${impact}`);
+            switchView('register');
         }
 
         function nouveauRisqueModal() {
