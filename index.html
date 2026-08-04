@@ -17,6 +17,9 @@
             --success: #10b981;
             --warning: #f59e0b;
             --danger: #ef4444;
+            --cia-c: #ef4444;
+            --cia-i: #f59e0b;
+            --cia-a: #3b82f6;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
@@ -88,7 +91,7 @@
         .btn-secondary:hover { background: var(--border); }
         
         .table-container { width: 100%; overflow-x: auto; background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border); }
-        table { width: 100%; border-collapse: collapse; min-width: 1100px; }
+        table { width: 100%; border-collapse: collapse; min-width: 1250px; }
         th, td { padding: 14px 16px; text-align: left; border-bottom: 1px solid var(--border); font-size: 0.85rem; vertical-align: middle; }
         th { background: rgba(255,255,255,0.02); color: var(--text-muted); white-space: nowrap; }
 
@@ -116,6 +119,28 @@
         .status-badge.false { background-color: rgba(239, 68, 68, 0.2); border-color: var(--danger); color: var(--danger); }
         .status-badge.true { background-color: rgba(16, 185, 129, 0.2); border-color: var(--success); color: var(--success); }
 
+        /* Boutons Triade CIA (C, I, A) */
+        .cia-group { display: flex; gap: 4px; justify-content: center; }
+        .cia-btn {
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            background: var(--bg-main);
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            font-weight: bold;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.2s;
+            user-select: none;
+        }
+        .cia-btn.active-c { background-color: rgba(239, 68, 68, 0.25); border-color: var(--cia-c); color: var(--cia-c); }
+        .cia-btn.active-i { background-color: rgba(245, 158, 11, 0.25); border-color: var(--cia-i); color: var(--cia-i); }
+        .cia-btn.active-a { background-color: rgba(59, 130, 246, 0.25); border-color: var(--cia-a); color: var(--cia-a); }
+
         /* Cartes de typologie cliquables */
         .typology-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
         .typology-card { background: var(--bg-card); border: 1px solid var(--border); padding: 20px; border-radius: 12px; display: flex; flex-direction: column; gap: 10px; cursor: pointer; transition: transform 0.2s, border-color 0.2s; }
@@ -131,7 +156,7 @@
 
     <sidebar>
         <div class="sidebar-top">
-            <div class="logo-area">Risk Matrix <span>V1.3</span></div>
+            <div class="logo-area">Risk Matrix <span>V1.4</span></div>
             <ul class="nav-links">
                 <li id="nav-dashboard" class="active" onclick="switchView('dashboard')">Tableau de Bord & Matrice</li>
                 <li id="nav-register" onclick="switchView('register')">Registre des Risques</li>
@@ -215,6 +240,7 @@
                                 <th>Intitulé du Risque</th>
                                 <th>Actif impacté</th>
                                 <th>Propriétaire</th>
+                                <th style="text-align: center;" title="Confidentialité, Intégrité, Disponibilité">CIA</th>
                                 <th>Prob.</th>
                                 <th>Impact</th>
                                 <th>Criticité</th>
@@ -302,9 +328,9 @@
 
     <script>
         let risks = JSON.parse(localStorage.getItem('risk_matrix_risks')) || [
-            { id: 1, date: "2026-01-10", title: "Fishing", asset: "Boîte mail collaborateurs", owner: "RSSI", prob: 5, impact: 5, prevention: true, continuity: false, pra: false },
-            { id: 2, date: "2026-02-15", title: "Erreur humaine", asset: "Base de données prod", owner: "RH", prob: 3, impact: 4, prevention: false, continuity: true, pra: true },
-            { id: 3, date: "2026-03-01", title: "L homme du milieu", asset: "Passerelle réseau", owner: "Équipe Sécurité", prob: 5, impact: 4, prevention: true, continuity: true, pra: true }
+            { id: 1, date: "2026-01-10", title: "Fishing", asset: "Boîte mail collaborateurs", owner: "RSSI", cia: {c: true, i: true, a: false}, prob: 5, impact: 5, prevention: true, continuity: false, pra: false },
+            { id: 2, date: "2026-02-15", title: "Erreur humaine", asset: "Base de données prod", owner: "RH", cia: {c: false, i: true, a: true}, prob: 3, impact: 4, prevention: false, continuity: true, pra: true },
+            { id: 3, date: "2026-03-01", title: "L homme du milieu", asset: "Passerelle réseau", owner: "Équipe Sécurité", cia: {c: true, i: true, a: true}, prob: 5, impact: 4, prevention: true, continuity: true, pra: true }
         ];
 
         let policy = JSON.parse(localStorage.getItem('risk_matrix_policy')) || { high: 12, med: 6 };
@@ -342,7 +368,7 @@
                 document.getElementById('nav-register').classList.add('active');
                 document.getElementById('view-register').classList.add('active-view');
                 document.getElementById('page-title').textContent = "Registre des Risques";
-                document.getElementById('page-subtitle').textContent = "Suivi des actifs, dates, plans de prévention, continuité et PRA.";
+                document.getElementById('page-subtitle').textContent = "Suivi des actifs, dates, triade CIA, plans de prévention, continuité et PRA.";
             } else if (viewName === 'typology') {
                 document.getElementById('nav-typology').classList.add('active');
                 document.getElementById('view-typology').classList.add('active-view');
@@ -407,9 +433,8 @@
                 const scoreA = a.prob * a.impact;
                 const scoreB = b.prob * b.impact;
                 if (scoreB !== scoreA) {
-                    return scoreB - scoreA; // Du plus grand score au plus petit
+                    return scoreB - scoreA;
                 }
-                // En cas d'égalité de score, on priorise par criticité globale (type) puis par probabilité décroissante
                 const typeA = getRiskLevel(a.prob, a.impact).weight;
                 const typeB = getRiskLevel(b.prob, b.impact).weight;
                 if (typeB !== typeA) {
@@ -437,6 +462,15 @@
 
         function toggleBooleanFlag(index, field) {
             risks[index][field] = !risks[index][field];
+            localStorage.setItem('risk_matrix_risks', JSON.stringify(risks));
+            renderApp();
+        }
+
+        function toggleCIAFlag(index, flag) {
+            if (!risks[index].cia) {
+                risks[index].cia = { c: false, i: false, a: false };
+            }
+            risks[index].cia[flag] = !risks[index].cia[flag];
             localStorage.setItem('risk_matrix_risks', JSON.stringify(risks));
             renderApp();
         }
@@ -501,7 +535,7 @@
             }
 
             let csvContent = "\uFEFF"; // BOM UTF-8 pour Excel
-            csvContent += "Date,Intitule du Risque,Actif impacte,Proprietaire,Probabilite,Impact,Score,Niveau de Criticite,Plan de prevention,Plan de continuite,PRA\n";
+            csvContent += "Date,Intitule du Risque,Actif impacte,Proprietaire,Confidentialite,Integrite,Disponibilite,Probabilite,Impact,Score,Niveau de Criticite,Plan de prevention,Plan de continuite,PRA\n";
 
             risks.forEach(r => {
                 const score = r.prob * r.impact;
@@ -510,11 +544,14 @@
                 const asset = `"${(r.asset || '').replace(/"/g, '""')}"`;
                 const owner = `"${(r.owner || '').replace(/"/g, '""')}"`;
                 const date = r.date || '';
+                const cVal = r.cia && r.cia.c ? 'Oui' : 'Non';
+                const iVal = r.cia && r.cia.i ? 'Oui' : 'Non';
+                const aVal = r.cia && r.cia.a ? 'Oui' : 'Non';
                 const prev = r.prevention ? 'Oui' : 'Non';
                 const cont = r.continuity ? 'Oui' : 'Non';
                 const pra = r.pra ? 'Oui' : 'Non';
 
-                csvContent += `${date},${title},${asset},${owner},${r.prob},${r.impact},${score},"${crit}",${prev},${cont},${pra}\n`;
+                csvContent += `${date},${title},${asset},${owner},${cVal},${iVal},${aVal},${r.prob},${r.impact},${score},"${crit}",${prev},${cont},${pra}\n`;
             });
 
             const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -550,6 +587,11 @@
                     impactOptions += `<option value="${i}" ${r.impact === i ? 'selected' : ''}>${i}</option>`;
                 }
 
+                if (!r.cia) r.cia = { c: false, i: false, a: false };
+                const cClass = r.cia.c ? 'active-c' : '';
+                const iClass = r.cia.i ? 'active-i' : '';
+                const aClass = r.cia.a ? 'active-a' : '';
+
                 const prevClass = r.prevention ? 'true' : 'false';
                 const prevSymbol = r.prevention ? '✓' : '✕';
                 const contClass = r.continuity ? 'true' : 'false';
@@ -570,6 +612,13 @@
                         </td>
                         <td>
                             <input type="text" class="input-text" value="${r.owner}" oninput="updateRiskField(${realIndex}, 'owner', this.value)" style="width: 110px;">
+                        </td>
+                        <td style="text-align: center;">
+                            <div class="cia-group">
+                                <div class="cia-btn ${cClass}" onclick="toggleCIAFlag(${realIndex}, 'c')" title="Confidentialité">C</div>
+                                <div class="cia-btn ${iClass}" onclick="toggleCIAFlag(${realIndex}, 'i')" title="Intégrité">I</div>
+                                <div class="cia-btn ${aClass}" onclick="toggleCIAFlag(${realIndex}, 'a')" title="Disponibilité">A</div>
+                            </div>
                         </td>
                         <td>
                             <select class="select-val" onchange="updateRiskField(${realIndex}, 'prob', this.value);">
@@ -645,6 +694,7 @@
                 title: scenario, 
                 asset: "Infrastructure critique", 
                 owner: "RSSI", 
+                cia: { c: true, i: true, a: true },
                 prob: 3, 
                 impact: 3, 
                 prevention: false, 
@@ -667,7 +717,18 @@
             const impact = parseInt(prompt("Impact (1 à 5) :")) || 3;
             const today = new Date().toISOString().split('T')[0];
 
-            risks.push({ date: today, title, asset, owner, prob, impact, prevention: false, continuity: false, pra: false });
+            risks.push({ 
+                date: today, 
+                title, 
+                asset, 
+                owner, 
+                cia: { c: true, i: false, a: false }, 
+                prob, 
+                impact, 
+                prevention: false, 
+                continuity: false, 
+                pra: false 
+            });
             sortRisks();
             renderApp();
             switchView('register');
@@ -684,7 +745,6 @@
             }
         }
 
-        // Tri initial au chargement
         sortRisks();
         renderApp();
     </script>
