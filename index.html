@@ -49,13 +49,33 @@
         .card-stat .number { font-size: 1.8rem; font-weight: bold; }
 
         /* Matrice 5x5 Container */
-        .matrix-section { background: var(--bg-card); border: 1px solid var(--border); padding: 20px; border-radius: 12px; }
-        .matrix-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-top: 15px; }
-        .matrix-cell { background: var(--bg-main); border: 1px solid var(--border); height: 90px; border-radius: 6px; padding: 8px; font-size: 0.75rem; display: flex; flex-direction: column; justify-content: space-between; }
+        .matrix-section { background: var(--bg-card); border: 1px solid var(--border); padding: 20px; border-radius: 12px; display: flex; flex-direction: column; gap: 15px; }
+        .matrix-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+        
+        .matrix-cell { 
+            background: var(--bg-main); 
+            border: 1px solid var(--border); 
+            height: 90px; 
+            border-radius: 6px; 
+            padding: 8px; 
+            font-size: 0.75rem; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: space-between; 
+            cursor: pointer; 
+            transition: transform 0.15s, border-color 0.15s; 
+        }
+        .matrix-cell:hover { transform: scale(1.02); border-color: var(--accent); }
+        .matrix-cell.selected-cell { border: 2px solid white !important; }
         
         .matrix-cell.risk-high { background-color: rgba(239, 68, 68, 0.25); border-color: var(--danger); }
         .matrix-cell.risk-med { background-color: rgba(245, 158, 11, 0.25); border-color: var(--warning); }
         .matrix-cell.risk-low { background-color: rgba(16, 185, 129, 0.25); border-color: var(--success); }
+
+        /* Panneau de détails sous la matrice */
+        .matrix-details-panel { background: var(--bg-main); border: 1px solid var(--border); padding: 20px; border-radius: 8px; display: flex; flex-direction: column; gap: 12px; }
+        .matrix-details-panel h4 { color: var(--accent); font-size: 1rem; display: flex; justify-content: space-between; align-items: center; }
+        .risk-detail-item { background: var(--bg-card); padding: 12px; border-radius: 6px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; }
 
         /* Actions & Table */
         .toolbar { display: flex; justify-content: space-between; align-items: center; }
@@ -88,16 +108,8 @@
             border: 1px solid transparent;
             user-select: none;
         }
-        .status-badge.false {
-            background-color: rgba(239, 68, 68, 0.2);
-            border-color: var(--danger);
-            color: var(--danger);
-        }
-        .status-badge.true {
-            background-color: rgba(16, 185, 129, 0.2);
-            border-color: var(--success);
-            color: var(--success);
-        }
+        .status-badge.false { background-color: rgba(239, 68, 68, 0.2); border-color: var(--danger); color: var(--danger); }
+        .status-badge.true { background-color: rgba(16, 185, 129, 0.2); border-color: var(--success); color: var(--success); }
 
         /* Cartes de typologie cliquables */
         .typology-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
@@ -107,7 +119,6 @@
         .typology-card p { font-size: 0.9rem; color: var(--text-muted); line-height: 1.5; }
 
         .filter-banner { background: rgba(59, 130, 246, 0.15); border: 1px solid var(--accent); padding: 10px 15px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; font-size: 0.9rem; }
-
         .policy-box { display: flex; gap: 15px; align-items: center; background: var(--bg-main); padding: 15px; border-radius: 8px; border: 1px solid var(--border); margin-top: 10px; }
     </style>
 </head>
@@ -115,7 +126,7 @@
 
     <sidebar>
         <div class="sidebar-top">
-            <div class="logo-area">Risk Matrix <span>V1.0</span></div>
+            <div class="logo-area">Risk Matrix <span>V1.1</span></div>
             <ul class="nav-links">
                 <li id="nav-dashboard" class="active" onclick="switchView('dashboard')">Tableau de Bord & Matrice</li>
                 <li id="nav-register" onclick="switchView('register')">Registre des Risques</li>
@@ -159,10 +170,18 @@
 
                 <div class="matrix-section">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <h3>Matrice de Criticité 5×5 (Personnalisable)</h3>
+                        <h3>Matrice de Criticité 5×5 (Cliquez sur une case pour voir les détails)</h3>
                         <span style="font-size: 0.8rem; color: var(--text-muted);">* Le carré supérieur droit (P≥4 et I≥4) est verrouillé en critique.</span>
                     </div>
                     <div class="matrix-grid" id="matrix-container"></div>
+                    
+                    <!-- Panneau de détails dynamique sous la matrice -->
+                    <div id="matrix-details-container" class="matrix-details-panel" style="display: none;">
+                        <h4 id="matrix-details-title">Détails de la case</h4>
+                        <div id="matrix-details-content" style="display: flex; flex-direction: column; gap: 8px;">
+                            <!-- Injection des détails du risque -->
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -290,6 +309,7 @@
         });
 
         let currentTypologyFilter = null;
+        let selectedCellCoords = null;
 
         function updatePolicy() {
             policy.high = parseInt(document.getElementById('threshold-high').value) || 12;
@@ -378,6 +398,9 @@
             localStorage.setItem('risk_matrix_risks', JSON.stringify(risks));
             renderMatrix();
             updateStats();
+            if (selectedCellCoords) {
+                showCellDetails(selectedCellCoords.x, selectedCellCoords.y);
+            }
         }
 
         function toggleBooleanFlag(index, field) {
@@ -401,6 +424,42 @@
             document.getElementById('stat-critical').textContent = critical;
             document.getElementById('stat-medium').textContent = medium;
             document.getElementById('stat-low').textContent = low;
+        }
+
+        function showCellDetails(x, y) {
+            selectedCellCoords = { x, y };
+            const container = document.getElementById('matrix-details-container');
+            const titleContainer = document.getElementById('matrix-details-title');
+            const contentContainer = document.getElementById('matrix-details-content');
+            
+            container.style.display = 'flex';
+            titleContainer.innerHTML = `<span>Détails de la case — Probabilité : ${x} | Impact : ${y}</span> <button class="btn" style="padding: 2px 8px; font-size: 0.75rem;" onclick="closeCellDetails()">Fermer</button>`;
+            
+            const matchingRisks = risks.filter(r => r.prob === x && r.impact === y);
+            contentContainer.innerHTML = '';
+
+            if (matchingRisks.length === 0) {
+                contentContainer.innerHTML = `<div style="color: var(--text-muted); font-size: 0.85rem; padding: 5px;">Aucun risque enregistré sur cette position.</div>`;
+                return;
+            }
+
+            matchingRisks.forEach(r => {
+                contentContainer.innerHTML += `
+                    <div class="risk-detail-item">
+                        <div>
+                            <strong>${r.title}</strong><br>
+                            <span style="color: var(--text-muted);">Actif : ${r.asset || 'N/A'} | Propriétaire : ${r.owner} | Date : ${r.date || 'N/A'}</span>
+                        </div>
+                        <button class="btn" style="padding: 6px 12px; font-size: 0.8rem;" onclick="switchView('register')">Voir dans le registre</button>
+                    </div>
+                `;
+            });
+        }
+
+        function closeCellDetails() {
+            selectedCellCoords = null;
+            document.getElementById('matrix-details-container').style.display = 'none';
+            renderMatrix();
         }
 
         function renderApp() {
@@ -428,10 +487,8 @@
 
                 const prevClass = r.prevention ? 'true' : 'false';
                 const prevSymbol = r.prevention ? '✓' : '✕';
-
                 const contClass = r.continuity ? 'true' : 'false';
                 const contSymbol = r.continuity ? '✓' : '✕';
-
                 const praClass = r.pra ? 'true' : 'false';
                 const praSymbol = r.pra ? '✓' : '✕';
 
@@ -478,6 +535,9 @@
 
             updateStats();
             renderMatrix();
+            if (selectedCellCoords) {
+                showCellDetails(selectedCellCoords.x, selectedCellCoords.y);
+            }
             localStorage.setItem('risk_matrix_risks', JSON.stringify(risks));
         }
 
@@ -492,10 +552,15 @@
                     if (type === 'high') cellClass = 'risk-high';
                     else if (type === 'med') cellClass = 'risk-med';
 
+                    if (selectedCellCoords && selectedCellCoords.x === x && selectedCellCoords.y === y) {
+                        cellClass += ' selected-cell';
+                    }
+
                     const matchingRisks = risks.filter(r => r.prob === x && r.impact === y);
                     
                     let cellDiv = document.createElement('div');
                     cellDiv.className = `matrix-cell ${cellClass}`;
+                    cellDiv.onclick = () => showCellDetails(x, y);
                     cellDiv.innerHTML = `<span>P:${x} I:${y}</span> <strong style="overflow:hidden; text-overflow:ellipsis; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;">${matchingRisks.map(r => r.title).join(', ')}</strong>`;
                     container.appendChild(cellDiv);
                 }
@@ -544,6 +609,9 @@
         function deleteRisk(index) {
             if(confirm("Voulez-vous vraiment supprimer ce risque ?")) {
                 risks.splice(index, 1);
+                if (selectedCellCoords) {
+                    closeCellDetails();
+                }
                 renderApp();
             }
         }
